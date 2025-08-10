@@ -1,0 +1,86 @@
+QWidget {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+QLabel#header {
+    font-size: 20px;
+    font-weight: bold;
+    padding: 15px;
+    background: #2563eb;
+    color: white;
+    border-radius: 8px;
+}
+
+QFrame.card {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    margin: 5px;
+}
+
+QPushButton {
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    background: #1d4ed8;
+}
+
+QPushButton:checked {
+    background: #dc2626;
+}
+
+QComboBox {
+    background: white;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    padding: 6px;
+    min-width: 120px;
+}
+
+QLabel#video_display {
+    background: #f8f9fa;
+    border: 2px solid #2563eb;
+    border-radius: 8px;
+    padding: 20px;
+    min-height: 300px;
+}
+
+QLabel#employee_photo {
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background: #f8f9fa;
+}
+
+QLabel.info {
+    font-size: 13px;
+    padding: 5px 10px;
+    background: #f1f5f9;
+    border-left: 3px solid #2563eb;
+    margin: 2px 0;
+}
+
+QTextEdit {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 5px;
+    font-family: 'Consolas', monospace;
+    font-size: 11px;
+    max-height: 100px;
+}
+
+QLabel.status {
+    font-weight: bold;
+    padding: 8px;
+    border-radius: 6px;
+    text-align: center;
+}

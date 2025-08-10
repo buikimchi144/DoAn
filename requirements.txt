@@ -1,0 +1,9 @@
+face_recognition
+opencv-python
+numpy
+pillow
+pyodbc
+tkinter
+cmake
+
+# pip install -r requirements.txt
