@@ -1,6 +1,6 @@
-----------Tài khoản đăng nhập---------- 
+Tài khoản đăng nhập
 
----Quản trị viên---
+---Admin (Quản trị viên)---
 
 👤 Tên đăng nhập: admin
 
