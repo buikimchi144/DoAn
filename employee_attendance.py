@@ -1387,7 +1387,7 @@ class EmployeeAttendanceApp(QMainWindow):
                 db_role = "admin"
             else:  # Nhân viên
                 password = "456"
-                db_role = "employee"
+                db_role = "user"
 
             # Add user to Users table
             self.db.employees.add_user(

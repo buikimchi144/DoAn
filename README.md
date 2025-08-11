@@ -10,7 +10,7 @@ Chọn quyền hạn: Admin
 
 ---Nhân viên---
 
-👤 Tên đăng nhập: Mã nhân viên (ví dụ: 86)
+👤 Tên đăng nhập: Mã nhân viên (ví dụ: 92)
 
 🔒 Mật khẩu: 456
 

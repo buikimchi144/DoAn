@@ -161,7 +161,7 @@ class EmployeeOperations:
 
             if count == 0:
                 raise Exception(f"Không tìm thấy nhân viên với ID: {employee_id}")
-
+            cursor.execute("DELETE FROM Users WHERE EmployeeID = ?", (employee_id,))
             # Xóa các bản ghi liên quan trước (nếu có)
             cursor.execute("DELETE FROM WorkSessions WHERE EmployeeID = ?", (employee_id,))
             cursor.execute("DELETE FROM AttendanceLogs WHERE EmployeeID = ?", (employee_id,))

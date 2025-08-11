@@ -239,41 +239,31 @@ class Controller:
             self.login_window.show()
 
         elif window_type == 'employee_app':
-            # KHẮC PHỤC: Luôn tạo mới window khi user khác đăng nhập
-            if self.employee_app and self._is_different_user(user_info):
+            # Luôn tạo mới window khi đổi user
+            if self.employee_app:
                 self.employee_app.close()
                 self.employee_app = None
 
-            if not self.employee_app:
-                self.employee_app = EmployeeAttendanceApp(
-                    user_info=user_info,
-                    db=self.db,
-                    face_recognizer=self.face_recognizer,
-                    controller_window=self
-                )
-            else:
-                # Cập nhật thông tin user cho window hiện tại
-                self.employee_app.update_user_info(user_info)
-
+            self.employee_app = EmployeeAttendanceApp(
+                user_info=user_info,
+                db=self.db,
+                face_recognizer=self.face_recognizer,
+                controller_window=self
+            )
             self.current_user = user_info
             self.employee_app.show()
 
         elif window_type == 'personal_stats_ui':
-            # KHẮC PHỤC: Luôn tạo mới window khi user khác đăng nhập
-            if self.personal_stats_ui and self._is_different_user(user_info):
+            # Luôn tạo mới window khi đổi user
+            if self.personal_stats_ui:
                 self.personal_stats_ui.close()
                 self.personal_stats_ui = None
 
-            if not self.personal_stats_ui:
-                self.personal_stats_ui = PersonalAttendanceStatsUI(
-                    user_info=user_info,
-                    db=self.db,
-                    controller_window=self
-                )
-            else:
-                # Cập nhật thông tin user cho window hiện tại
-                self.personal_stats_ui.update_user_info(user_info)
-
+            self.personal_stats_ui = PersonalAttendanceStatsUI(
+                user_info=user_info,
+                db=self.db,
+                controller_window=self
+            )
             self.current_user = user_info
             self.personal_stats_ui.show()
 
@@ -285,18 +275,9 @@ class Controller:
                     face_recognizer=self.face_recognizer
                 )
             self.attendance_window.show()
+
         else:
             print(f"Warning: Unknown window type '{window_type}' requested.")
-
-    def _is_different_user(self, new_user_info):
-        """Kiểm tra xem user mới có khác user hiện tại không"""
-        if not self.current_user or not new_user_info:
-            return True
-
-        current_id = self.current_user.get('id', self.current_user.get('user_id'))
-        new_id = new_user_info.get('id', new_user_info.get('user_id'))
-
-        return current_id != new_id
 
     def _hide_all_windows(self):
         """Helper to hide all windows managed by the controller."""
