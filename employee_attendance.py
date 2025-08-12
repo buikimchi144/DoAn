@@ -672,17 +672,11 @@ class EmployeeAttendanceApp(QMainWindow):
         if gender_index >= 0:
             self.edit_emp_gender.setCurrentIndex(gender_index)
 
-        self.edit_user_role = QComboBox()
-        self.edit_user_role.addItems(["Admin", "Nhân viên"])
 
-        # Ánh xạ role từ DB sang hiển thị
-        if self.edit_data['role'].lower() == "admin":
-            self.edit_user_role.setCurrentIndex(0)
-        else:
-            self.edit_user_role.setCurrentIndex(1)
-        role_index = self.edit_user_role.findText(self.edit_data['role'])
-        if role_index >= 0:
-            self.edit_user_role.setCurrentIndex(role_index)
+        # Gán cứng "Nhân viên" trong form edit - dạng input cố định
+        self.edit_user_role = QLineEdit()
+        self.edit_user_role.setText("Nhân viên")  # Gán cứng giá trị
+        self.edit_user_role.setReadOnly(True)  # Không cho sửa
 
         self.edit_emp_position = QLineEdit(self.edit_data['position'])
 
@@ -854,6 +848,7 @@ class EmployeeAttendanceApp(QMainWindow):
 
         return card
 
+
     def build_register_form(self):
         """Build registration form with integrated camera - removed manual avatar selection"""
         self.clear_layout(self.main_layout)
@@ -888,8 +883,10 @@ class EmployeeAttendanceApp(QMainWindow):
         self.entry_position.setPlaceholderText("Chức vụ")
 
         # Thêm role selection
-        self.entry_role = QComboBox()
-        self.entry_role.addItems(["Nhân viên", "Admin"])
+        # Thêm ô quyền hạn cố định
+        self.entry_role = QLineEdit()
+        self.entry_role.setText("Nhân viên")  # Gán cứng
+        self.entry_role.setReadOnly(True)  # Không cho sửa
 
         self.entry_dob = QDateEdit()
         self.entry_dob.setCalendarPopup(True)
@@ -1017,6 +1014,7 @@ class EmployeeAttendanceApp(QMainWindow):
         main_layout.addWidget(camera_widget, 1)  # Camera chiếm 1/3
 
         self.main_layout.addLayout(main_layout)
+
 
     def frame_to_base64(self, frame):
         """Convert OpenCV frame to base64 string"""
@@ -1340,9 +1338,12 @@ class EmployeeAttendanceApp(QMainWindow):
         department = self.department.text().strip()
         gender = self.entry_gender.currentText().strip()
         position = self.entry_position.text().strip()
-        role = self.entry_role.currentText().strip()
         dob = self.entry_dob.date().toString("yyyy-MM-dd")
         join_date = self.entry_joindate.date().toString("yyyy-MM-dd")
+
+        role_display = "Nhân viên"
+        db_role = "user"
+        password = "456"
 
         if not name or not department:
             QMessageBox.warning(self, "Thiếu thông tin", "Vui lòng nhập họ tên và Phòng ban.")
@@ -1357,12 +1358,9 @@ class EmployeeAttendanceApp(QMainWindow):
             return
 
         try:
-            # Convert selected avatar to base64
             face_img_base64 = self.frame_to_base64(self.selected_avatar_frame)
             face_img_bytes = base64.b64decode(face_img_base64)
-            print("face_img_bytes", face_img_bytes)
 
-            # Save employee with face image
             emp_id = self.db.employees.add_employee(
                 full_name=name,
                 department=department,
@@ -1370,26 +1368,14 @@ class EmployeeAttendanceApp(QMainWindow):
                 position=position,
                 dob=dob,
                 join_date=join_date,
-                face_img=face_img_bytes  # Add face_img parameter
+                face_img=face_img_bytes
             )
 
-            # Save face encoding
             encoding_str = ','.join(map(str, self.current_embedding.tolist()))
-            print("emp_id", emp_id)
             self.db.employees.add_encoding(emp_id, encoding_str)
 
-            # Create user account
-            username = str(emp_id)  # Username sử dụng employee ID
+            username = str(emp_id)
 
-            # Set password based on role
-            if role == "Admin":
-                password = "123"
-                db_role = "admin"
-            else:  # Nhân viên
-                password = "456"
-                db_role = "user"
-
-            # Add user to Users table
             self.db.employees.add_user(
                 username=username,
                 password=password,
@@ -1405,9 +1391,8 @@ class EmployeeAttendanceApp(QMainWindow):
                                     f"Đã lưu nhân viên {name} với ảnh đại diện\n"
                                     f"Tài khoản: {username}\n"
                                     f"Mật khẩu: {password}\n"
-                                    f"Quyền: {role}")
+                                    f"Quyền: {role_display}")
 
-            # Reset form
             self.reset_form()
 
         except Exception as e:
@@ -1735,58 +1720,63 @@ class EmployeeAttendanceApp(QMainWindow):
             department = self.edit_emp_department.text().strip()
             gender = self.edit_emp_gender.currentText()
 
-            # Ánh xạ quyền hạn từ giao diện -> DB
-            role_display = self.edit_user_role.currentText()
-            if role_display == "Admin":
-                role = "admin"
-            else:
-                role = "user"
+            # Role mặc định cho nhân viên
+            role = "user"
 
             position = self.edit_emp_position.text().strip()
             dob = self.edit_emp_dob.date().toString("yyyy-MM-dd")
             join_date = self.edit_emp_joindate.date().toString("yyyy-MM-dd")
 
+            # Kiểm tra thông tin bắt buộc
             if not name or not department:
-                QMessageBox.warning(self, "Thiếu thông tin", "Vui lòng nhập họ tên và Phòng ban.")
+                QMessageBox.warning(self, "Thiếu thông tin", "Vui lòng nhập Họ tên và Phòng ban.")
                 return
 
             employee_id = self.edit_data['employee_id']
 
-            # Update basic employee info
-            self.db.employees.update_employee(employee_id, name, department, gender, position, dob, join_date, role)
+            # Cập nhật thông tin cơ bản của nhân viên
+            self.db.employees.update_employee(
+                employee_id, name, department, gender, position, dob, join_date, role
+            )
 
-            # Update face data nếu có ảnh mới
+            # Nếu có dữ liệu khuôn mặt mới
             if hasattr(self, 'edit_current_embedding') and self.edit_current_embedding is not None:
                 print("Cập nhật dữ liệu khuôn mặt mới...")
 
-                # Update face encoding
+                # Chuyển embedding thành chuỗi lưu vào DB
                 encoding_str = ','.join(map(str, self.edit_current_embedding.tolist()))
                 self.db.employees.update_face_encoding(employee_id, encoding_str)
 
-                # Update face image nếu có
+                # Cập nhật ảnh khuôn mặt nếu có
                 if hasattr(self, 'edit_selected_avatar_frame') and self.edit_selected_avatar_frame is not None:
                     face_img_base64 = self.frame_to_base64(self.edit_selected_avatar_frame)
                     face_img_bytes = base64.b64decode(face_img_base64)
                     self.db.employees.update_employee_face_image(employee_id, face_img_bytes)
 
-                QMessageBox.information(self, "Thành công",
-                                        f"Đã cập nhật thông tin và khuôn mặt của nhân viên {name}!")
+                QMessageBox.information(
+                    self, "Thành công",
+                    f"Đã cập nhật thông tin và khuôn mặt của nhân viên {name}!"
+                )
             else:
-                QMessageBox.information(self, "Thành công",
-                                        f"Đã cập nhật thông tin nhân viên {name}!")
+                QMessageBox.information(
+                    self, "Thành công",
+                    f"Đã cập nhật thông tin nhân viên {name}!"
+                )
 
-            # Reset edit mode
+            # Reset chế độ chỉnh sửa
             self.edit_mode = None
             self.edit_data = None
 
-            # Clean up edit-specific data
-            for attr in ['edit_current_embedding', 'edit_embeddings_list',
-                         'edit_captured_frames', 'edit_face_qualities',
-                         'edit_selected_avatar_frame']:
+            # Xóa dữ liệu tạm trong quá trình chỉnh sửa
+            for attr in [
+                'edit_current_embedding', 'edit_embeddings_list',
+                'edit_captured_frames', 'edit_face_qualities',
+                'edit_selected_avatar_frame'
+            ]:
                 if hasattr(self, attr):
                     delattr(self, attr)
 
-            # Quay về danh sách nhân viên
+            # Quay lại danh sách nhân viên
             self.show_employee_list()
 
         except Exception as e:
