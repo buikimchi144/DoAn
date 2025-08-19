@@ -95,6 +95,7 @@ class AttendanceOperations:
             print(f"Error in determine_status: {e}")
             return "Không xác định"
 
+    # Tính số giờ làm việc
     def calculate_work_hours(self, check_in, check_out, attendance_date):
         if not check_in:
             return '---'
@@ -132,6 +133,7 @@ class AttendanceOperations:
         hours = round(work_duration / 60.0, 2)
         return f"{hours} giờ" if hours > 0 else '---'
 
+    # Ghi lại thông tin điểm danh
     def log_attendance(self, employee_id, check_type='Check In', face_img=None, confidence=None):
         try:
             now = datetime.now()

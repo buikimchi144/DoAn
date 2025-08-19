@@ -13,7 +13,7 @@ import base64
 import cv2
 from PyQt5.QtWidgets import *
 
-# Import necessary modules and widgets
+# Import các thư viện và giao diện
 from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout,
                              QPushButton, QLabel, QDesktopWidget, QComboBox,
                              QLineEdit, QMessageBox)
@@ -199,13 +199,15 @@ class IconLineEdit(QWidget):
         layout.addWidget(icon_label)
         layout.addWidget(self.line_edit)
 
+
     def text(self):
         return self.line_edit.text().strip()
 
+    # Đặt trả về hành động được nhấn
     def set_return_pressed_action(self, action):
         self.line_edit.returnPressed.connect(action)
 
-
+    # Bộ điều khiển
 class Controller:
     def __init__(self, db, face_recognizer):
         self.db = db
@@ -216,7 +218,7 @@ class Controller:
         self.employee_app = None
         self.personal_stats_ui = None
 
-        # Thêm biến để track current user
+        # Thêm biến để theo dõi người dùng hiện tại
         self.current_user = None
 
         # Connect signals
@@ -225,8 +227,9 @@ class Controller:
 
         self.main_window.show()
 
+    # Phương thức thống nhất để chuyển đổi và quản lý các cửa sổ
     def show_window(self, window_type, user_info=None, selected_role=None):
-        """Unified method to switch and manage windows."""
+
         self._hide_all_windows()
 
         if window_type == 'login':
@@ -279,8 +282,9 @@ class Controller:
         else:
             print(f"Warning: Unknown window type '{window_type}' requested.")
 
+    # Hàm hỗ trợ để ẩn tất cả các cửa sổ do controller quản lý
     def _hide_all_windows(self):
-        """Helper to hide all windows managed by the controller."""
+
         if self.main_window:
             self.main_window.hide()
         if self.login_window:
@@ -292,16 +296,17 @@ class Controller:
         if self.personal_stats_ui:
             self.personal_stats_ui.hide()
 
+    # Đăng xuất và reset tất cả dữ liệu user
     def logout_user(self):
-        """Đăng xuất và reset tất cả dữ liệu user"""
-        # Reset current user
+
+        # Đặt lại người dùng hiện tại
         self.current_user = None
 
-        # Reset database current user
+        # Đặt lại người dùng hiện tại của cơ sở dữ liệu
         if self.db:
             self.db.current_user = None
 
-        # Reset login window
+        # Đặt lại cửa sổ đăng nhập
         if self.login_window:
             self.login_window.current_user = None
 
@@ -317,13 +322,15 @@ class Controller:
         # Hiển thị main window
         self.show_main_window()
 
+    # Phương thức rõ ràng/riêng biệt để hiển thị cửa sổ chính.
     def show_main_window(self):
-        """Explicit method to show the main window."""
+
         self._hide_all_windows()
         self.main_window.show()
 
-
+    # Class cửa sổ chính
 class MainWindow(QWidget):
+
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Hệ thống Quản lý Doanh nghiệp")
@@ -332,8 +339,9 @@ class MainWindow(QWidget):
         self.center_window()
         self.init_ui()
 
+    # Căn giữa cửa sổ trên màn hình
     def center_window(self):
-        """Center the window on the screen"""
+
         screen = QApplication.primaryScreen().availableGeometry()
         window = self.geometry()
         x = (screen.width() - window.width()) // 2
@@ -371,7 +379,7 @@ class MainWindow(QWidget):
         self.login_button = login_btn
         self.attendance_button = attendance_btn
 
-
+    # Class cửa sổ đăng nhập
 class LoginWindow(QWidget):
     # --- Tối ưu 3: Sử dụng hằng số cho các chuỗi văn bản và cấu hình ---
     WINDOW_TITLE = "Đăng nhập"
@@ -395,18 +403,21 @@ class LoginWindow(QWidget):
         self._create_ui()
         self._center_window()
 
+    # Cài đặt cửa sổ
     def _setup_window(self):
         self.setWindowTitle(self.WINDOW_TITLE)
         self.setFixedSize(550, 600)
         self.setWindowIcon(QIcon(self.ICON_PATH))
         self.setStyleSheet(STYLES["login_window"])
 
+    # Canh giữa cửa sổ
     def _center_window(self):
-        screen_geometry = QApplication.primaryScreen().availableGeometry()
-        window_geometry = self.frameGeometry()
+        screen_geometry = QApplication.primaryScreen().availableGeometry() # Lấy thông tin kích thước màn hình khả dụng
+        window_geometry = self.frameGeometry() # Lấy hình chữ nhật bao quanh cửa sổ hiện tại
         window_geometry.moveCenter(screen_geometry.center())
         self.move(window_geometry.topLeft())
 
+    # Xây dựng giao diện
     def _create_ui(self):
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
@@ -484,6 +495,7 @@ class LoginWindow(QWidget):
 
         return form_container
 
+    # Xử lý đăng nhập
     def _handle_login(self):
         username = self.username_input.text()
         password = self.password_input.text()
@@ -523,6 +535,7 @@ class LoginWindow(QWidget):
         except Exception as e:
             self._show_message("Lỗi", f"Lỗi xác thực: {e}", QMessageBox.Critical)
 
+    # Người dùng đăng nhập thành công
     def _login_success(self, user_info, role):
         try:
             if role == "admin":
@@ -541,6 +554,7 @@ class LoginWindow(QWidget):
         except Exception as e:
             self._show_message("Lỗi", f"Lỗi khởi tạo ứng dụng: {e}", QMessageBox.Critical)
 
+    # Hiển thị hộp thông báo
     def _show_message(self, title, message, icon):
         msg_box = QMessageBox(self)
         msg_box.setWindowTitle(title)
@@ -549,19 +563,22 @@ class LoginWindow(QWidget):
         msg_box.setStyleSheet(STYLES["message_box"])
         msg_box.exec_()
 
+    # Quay lại hoặc đăng xuất
     def _go_back(self):
-        """Override để logout đúng cách"""
+
         if self.controller:
             self.controller.logout_user()  # Sử dụng method logout thay vì show_main_window
         self.close()
 
+    # Ghi đè sự kiện đóng để đặt lại người dùng khi đóng cửa sổ
     def closeEvent(self, event):
-        """Override closeEvent để reset user khi đóng window"""
+
         self.current_user = None
         if self.db:
             self.db.current_user = None
         event.accept()
-# Main application entry point
+
+# Điểm bắt đầu chính của ứng dụng
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 

@@ -14,7 +14,7 @@ class Database:
             self.cursor = self.conn.cursor()
             logging.info("Database connection established successfully.")
 
-            # Instantiate operation classes, passing the connection and cursor
+            # Khởi tạo các lớp hoạt động, truyền kết nối và con trỏ
             self.employees = EmployeeOperations(self.conn, self.cursor)
             self.attendance = AttendanceOperations(self.conn, self.cursor)
 
@@ -24,13 +24,14 @@ class Database:
                 logging.error("Authentication error: Invalid UID or PWD.")
             else:
                 logging.error(f"Database connection error: {ex}")
-            raise # Re-raise the exception to indicate connection failure
+            raise
         except Exception as e:
             logging.error(f"An unexpected error occurred during database initialization: {e}")
             raise
 
+    # Xác thực người dùng với cơ sở dữ liệu
     def authenticate_user(self, username, password):
-        """Authenticate user against database"""
+
         try:
             # Băm mật khẩu đầu vào
             password_hash = hashlib.sha256(password.encode()).hexdigest()

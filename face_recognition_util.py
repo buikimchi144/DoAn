@@ -6,7 +6,9 @@ from collections import deque
 
 
 class FaceRecognitionUtil:
+
     def __init__(self, det_size=(416, 416)):
+
         # Cấu hình tối ưu cho cả tốc độ và chính xác
         self.face_app = FaceAnalysis(
             name='buffalo_l',
@@ -38,10 +40,8 @@ class FaceRecognitionUtil:
 
         print("[INFO] FaceRecognitionUtil tối ưu - Chế độ cân bằng tốc độ và chính xác")
 
+    # Phát hiện khuôn mặt tối ưu với validation và quality check
     def detect_face(self, frame):
-        """
-        Phát hiện khuôn mặt tối ưu với validation và quality check
-        """
         current_time = time.time()
 
         # Cải thiện chất lượng frame - tối ưu hóa
@@ -52,7 +52,7 @@ class FaceRecognitionUtil:
                 self.last_frame_faces and len(self.last_frame_faces) > 0):
             faces = self.last_frame_faces
         else:
-            # Detection với validation
+            # Phát hiện khuôn mặt với kiểm tra
             faces = self._fast_face_detection(enhanced_frame)
             self.last_frame_faces = faces
             self.frame_cache_time = current_time
@@ -63,10 +63,10 @@ class FaceRecognitionUtil:
         # Chọn khuôn mặt tốt nhất với scoring
         best_face = self._select_best_face(faces)
 
-        # Crop và align chính xác hơn
+        # Cắt ảnh và trích xuất chính xác hơn
         aligned_face = self._get_aligned_face_crop(enhanced_frame, best_face)
 
-        # Extract embedding với quality validation - QUAN TRỌNG
+        # Trích xuất Embedding và lưu vào biến
         embedding = self._get_fast_embedding(best_face)
 
         if embedding is None:
@@ -74,10 +74,8 @@ class FaceRecognitionUtil:
 
         return aligned_face, embedding
 
+    # Cải thiệm chất lượng frame và tối ưu
     def _enhance_frame(self, frame):
-        """
-        Cải thiện chất lượng frame - tối ưu hóa
-        """
         try:
             # Kiểm tra nhanh xem có cần enhance không
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -97,10 +95,8 @@ class FaceRecognitionUtil:
         except:
             return frame
 
+    # Phát hiện và kiểm tra chất lượng
     def _fast_face_detection(self, frame):
-        """
-        Detection với validation đa tầng - tối ưu hóa
-        """
         try:
             # ROI detection nếu enabled
             detection_frame = self._get_detection_region(frame)
@@ -111,40 +107,38 @@ class FaceRecognitionUtil:
             if not faces:
                 return []
 
-            # Validation nhanh hơn
+            # Lọc khuôn mặt kém chất lượng
             validated_faces = []
             for face in faces[:self.max_faces]:
                 if self._validate_face_quality_fast(face):
                     validated_faces.append(face)
 
-            # Sắp xếp theo composite score
+            # Sắp xếp dựa trên điểm tổng hợp
             if len(validated_faces) > 1:
                 validated_faces.sort(
                     key=lambda f: self._calculate_face_score(f),
                     reverse=True
                 )
-
             return validated_faces
 
         except Exception as e:
             print(f"[ERROR] Detection failed: {e}")
             return []
 
+    # Kiểm tra chất lượng khuôn mặt - tối ưu hóa
     def _validate_face_quality_fast(self, face):
-        """
-        Kiểm tra chất lượng khuôn mặt - tối ưu hóa
-        """
+
         # 1. Confidence check nhanh
         confidence = getattr(face, 'det_score', 0.0)
         if confidence < self.confidence_threshold:
             return False
 
-        # 2. Size check nhanh
+        # 2. Kiểm tra  kích thước
         bbox_area = (face.bbox[2] - face.bbox[0]) * (face.bbox[3] - face.bbox[1])
         if bbox_area < self.min_face_area:
             return False
 
-        # 3. Aspect ratio check nhanh
+        # 3. Kiểm tra tỉ lệ khung hình
         width = face.bbox[2] - face.bbox[0]
         height = face.bbox[3] - face.bbox[1]
         if height > 0:
@@ -152,31 +146,30 @@ class FaceRecognitionUtil:
             if not (0.6 <= aspect_ratio <= 1.6):  # Mở rộng range
                 return False
 
-        # 4. Bbox boundary check nhanh
+        # 4. Bứớc kiểm tra nhanh biên bounding box
         if (face.bbox[0] < 0 or face.bbox[1] < 0 or
                 face.bbox[2] < face.bbox[0] or face.bbox[3] < face.bbox[1]):
             return False
 
         return True
 
+    #  Tính điểm tổng hợp cho khuôn mặt
     def _calculate_face_score(self, face):
-        """
-        Tính điểm tổng hợp cho khuôn mặt - tối ưu hóa
-        """
+
         # Confidence score (60%) - tăng trọng số
         confidence = getattr(face, 'det_score', 0.0)
         confidence_score = confidence * 0.6
 
-        # Size score (25%) - giảm trọng số
+        # Kích thước khuôn mặt
         bbox_area = (face.bbox[2] - face.bbox[0]) * (face.bbox[3] - face.bbox[1])
-        max_reasonable_area = 120 * 120  # Giảm xuống
+        max_reasonable_area = 120 * 120
         size_score = min(bbox_area / max_reasonable_area, 1.0) * 0.25
 
-        # Position score (15%) - giảm trọng số
+        # Tính tâm của khuôn mặt
         face_center_x = (face.bbox[0] + face.bbox[2]) / 2
         face_center_y = (face.bbox[1] + face.bbox[3]) / 2
 
-        # Giả sử frame center
+        # Giả định tâm của khung hình
         frame_center_x, frame_center_y = 320, 240
 
         distance = np.sqrt((face_center_x - frame_center_x) ** 2 +
@@ -186,10 +179,9 @@ class FaceRecognitionUtil:
 
         return confidence_score + size_score + position_score
 
+    # Chọn khuôn mặt tốt nhất dựa trên composite scoring
     def _select_best_face(self, faces):
-        """
-        Chọn khuôn mặt tốt nhất dựa trên composite scoring
-        """
+
         if len(faces) == 1:
             return faces[0]
 
@@ -204,10 +196,9 @@ class FaceRecognitionUtil:
 
         return best_face
 
+    # Crop khuôn mặt với alignment
     def _get_aligned_face_crop(self, frame, face):
-        """
-        Crop khuôn mặt với alignment - tối ưu hóa
-        """
+
         try:
             x1, y1, x2, y2 = map(int, face.bbox)
 
@@ -217,7 +208,7 @@ class FaceRecognitionUtil:
             margin_x = int(face_width * 0.1)  # Giảm từ 15% xuống 10%
             margin_y = int(face_height * 0.1)
 
-            # Apply margin với boundary check
+            # “Mở rộng bbox nhưng phải kiểm tra để không vượt mép ảnh
             h, w = frame.shape[:2]
             x1 = max(0, x1 - margin_x)
             y1 = max(0, y1 - margin_y)
@@ -234,17 +225,16 @@ class FaceRecognitionUtil:
             x1, y1, x2, y2 = map(int, face.bbox)
             return frame[y1:y2, x1:x2]
 
+    # Trích xuất embedding với kiểm tra chất lượng
     def _get_fast_embedding(self, face):
-        """
-        Extract embedding với quality validation - QUAN TRỌNG CHO ACCURACY
-        """
+    
         try:
             # Ưu tiên normed_embedding
             if hasattr(face, "normed_embedding") and face.normed_embedding is not None:
                 embedding = face.normed_embedding.copy()
             elif hasattr(face, "embedding") and face.embedding is not None:
                 embedding = face.embedding.copy()
-                # Normalize với precision cao
+                # Chuẩn hóa embedding thành vector đơn vị
                 norm = np.linalg.norm(embedding, ord=2)
                 if norm > 1e-6:
                     embedding = embedding / norm
@@ -253,46 +243,43 @@ class FaceRecognitionUtil:
             else:
                 return None
 
-            # Validate embedding quality - quan trọng
+            # Kiểm tra và đánh giá chất lượng
             if not self._validate_embedding_quality(embedding):
                 return None
 
-            # Ensure float32 precision
+            # Đảm bảo dữ liệu được lưu dạng số thực
             embedding = embedding.astype(np.float32)
-
             return embedding.tolist() if hasattr(embedding, "tolist") else list(embedding)
 
         except Exception as e:
             print(f"[ERROR] Embedding extraction failed: {e}")
             return None
 
+    # Kiểm tra chất lượng embedding
     def _validate_embedding_quality(self, embedding):
-        """
-        Kiểm tra chất lượng embedding - tối ưu hóa
-        """
+
         try:
             # Check for NaN/Inf nhanh
             if np.any(np.isnan(embedding)) or np.any(np.isinf(embedding)):
                 return False
 
-            # Check norm range
+            # Kiểm tra phạm vi
             norm = np.linalg.norm(embedding)
             if norm < 0.5 or norm > 1.5:  # Tightened range
                 return False
 
-            # Check variance nhanh
+            # Kiểm tra phương sai
             variance = np.var(embedding)
-            if variance < 1e-5:  # Relaxed slightly
+            if variance < 1e-5:
                 return False
 
             return True
         except:
             return False
 
-    def compare_faces(self, embedding1, embedding2, threshold=0.5):  # GIẢM THRESHOLD
-        """
-        So sánh khuôn mặt với multiple metrics - QUAN TRỌNG NHẤT
-        """
+    # So sánh hai embedding khuôn mặt
+    def compare_faces(self, embedding1, embedding2, threshold=0.5):
+
         if embedding1 is None or embedding2 is None:
             return False, 0.0
 
@@ -300,7 +287,7 @@ class FaceRecognitionUtil:
             emb1 = np.asarray(embedding1, dtype=np.float32)
             emb2 = np.asarray(embedding2, dtype=np.float32)
 
-            # Normalize embeddings cẩn thận
+            # Chuẩn hóa embedding
             norm1 = np.linalg.norm(emb1)
             norm2 = np.linalg.norm(emb2)
 
@@ -319,11 +306,9 @@ class FaceRecognitionUtil:
             # Euclidean distance
             euclidean_dist = float(np.linalg.norm(emb1_norm - emb2_norm))
 
-            # Combined similarity score - tối ưu hóa
-            # Tăng trọng số cho cosine similarity vì nó quan trọng hơn
+            # Điểm tương đồng kết hợp
             similarity = cosine_sim * 0.8 + (2.0 - euclidean_dist) / 2.0 * 0.2
 
-            # ĐIỀU CHỈNH: sử dụng cosine similarity chủ yếu
             # Vì cosine similarity tốt hơn cho face recognition
             final_similarity = cosine_sim * 0.9 + similarity * 0.1
 
@@ -335,17 +320,17 @@ class FaceRecognitionUtil:
             print(f"[ERROR] Face comparison failed: {e}")
             return False, 0.0
 
+    # Xác định vùng khuôn mặt
     def _get_detection_region(self, frame):
-        """
-        ROI optimization
-        """
+
         if not self.roi_enabled or self.current_roi is None:
             return frame
 
+        # Lấy tọa độ vùng quan tâm
         x1, y1, x2, y2 = self.current_roi
         h, w = frame.shape[:2]
 
-        # Boundary check
+        # Kiểm tra ranh giới
         x1 = max(0, x1)
         y1 = max(0, y1)
         x2 = min(w, x2)
@@ -353,10 +338,9 @@ class FaceRecognitionUtil:
 
         return frame[y1:y2, x1:x2]
 
+    # Chỉ vẽ khi được yêu cầu rõ ràng (mặc định tắt)
     def draw_face_box(self, frame, draw_enabled=False):
-        """
-        Chỉ vẽ khi được yêu cầu rõ ràng (mặc định tắt)
-        """
+
         if not draw_enabled:
             return frame
 
@@ -380,12 +364,11 @@ class FaceRecognitionUtil:
 
         except Exception as e:
             print(f"[ERROR] Draw face box failed: {e}")
-
         return frame
+
+    # Lấy thông tin chi tiết của faces
     def get_face_info_fast(self, frame):
-        """
-        Lấy thông tin chi tiết của faces
-        """
+
         faces = self.last_frame_faces if self.last_frame_faces else self._fast_face_detection(frame)
 
         face_info = []
@@ -403,15 +386,14 @@ class FaceRecognitionUtil:
 
         return face_info
 
+    # Thiết lập chế độ nhanh
     def set_ultra_fast_mode(self, enabled=True):
-        """
-        Mode ultra nhanh với trade-off độ chính xác
-        """
+
         if enabled:
-            self.min_face_area = 600  # Giảm
+            self.min_face_area = 600
             self.max_faces = 2
-            self.cache_duration = 0.1  # Tăng cache
-            self.confidence_threshold = 0.5  # Giảm threshold
+            self.cache_duration = 0.1
+            self.confidence_threshold = 0.5
             print("[INFO] Ultra fast mode activated")
         else:
             self.min_face_area = 800
@@ -420,10 +402,9 @@ class FaceRecognitionUtil:
             self.confidence_threshold = 0.6
             print("[INFO] Balanced mode restored")
 
+    # Mode độ chính xác cao
     def set_high_accuracy_mode(self, enabled=True):
-        """
-        Mode độ chính xác cao
-        """
+
         if enabled:
             self.min_face_area = 1000  # Tăng
             self.max_faces = 5
@@ -437,53 +418,48 @@ class FaceRecognitionUtil:
             self.confidence_threshold = 0.6
             print("[INFO] Balanced mode restored")
 
+    # Bật/ tắt chế độ ROI
     def enable_roi_optimization(self, enabled=True):
-        """
-        Bật/tắt ROI optimization
-        """
+
         self.roi_enabled = enabled
         if not enabled:
             self.current_roi = None
         print(f"[INFO] ROI optimization {'enabled' if enabled else 'disabled'}")
 
+    # Xóa tất cả dữ liệu được lưu trữ tạm thời
     def clear_cache(self):
-        """
-        Xóa cache và reset
-        """
+
         self.last_frame_faces = []
         self.frame_cache_time = 0
         self.face_tracker = {}
         self.detection_history.clear()
 
+    # Khởi động và làm nóng mô hình học máy
     def warm_up(self, test_frame):
-        """
-        Warm up model để tránh latency lần đầu
-        """
+
         print("[INFO] Warming up model...")
         try:
-            # Enhanced warm up
+            # Khởi động nâng cao
             enhanced_frame = self._enhance_frame(test_frame)
 
             for _ in range(3):
                 self.face_app.get(enhanced_frame)
 
             print("[INFO] Model warmed up successfully")
+
         except Exception as e:
             print(f"[WARNING] Warm up failed: {e}")
 
+    # Thống kê chi tiết
     def get_statistics(self):
-        """
-        Thống kê chi tiết
-        """
+
         return {
-            'cached_faces': len(self.last_frame_faces),
-            'tracked_faces': len(self.face_tracker),
+            'cached_faces': len(self.last_frame_faces), # Trả về số lượng phần tử trong danh sách
+            'tracked_faces': len(self.face_tracker), # Trả về số lượng phần tử trong từ điển self.face_tracker
             'cache_duration': self.cache_duration,
-            'min_face_area': self.min_face_area,
-            'max_faces': self.max_faces,
-            'confidence_threshold': self.confidence_threshold,
-            'roi_enabled': self.roi_enabled,
-            'detection_size': getattr(self.face_app, 'det_size', 'unknown')
+            'min_face_area': self.min_face_area, # Diện tích khuôn mặt tối thiểu
+            'max_faces': self.max_faces, # Số lượng khuôn mặt tối đa
+            'confidence_threshold': self.confidence_threshold, # Ngưỡng tin cậy tối thiểu
+            'roi_enabled': self.roi_enabled, # Trạng thái của tính năng tối ưu hóa vùng quan tâm
+            'detection_size': getattr(self.face_app, 'det_size', 'unknown') # Kích thước của mô hình phát hiện khuôn mặt.
         }
-
-

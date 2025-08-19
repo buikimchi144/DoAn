@@ -6,7 +6,7 @@ import numpy as np
 from collections import deque
 import threading
 from collections import defaultdict
-# Setup logging
+# Thiết lập ghi nhận nhật ký
 import logging
 from PIL import Image, ImageDraw, ImageFont
 
@@ -28,6 +28,7 @@ class Camera:
         self.cap.set(cv2.CAP_PROP_BRIGHTNESS, 0.6)
         self.cap.set(cv2.CAP_PROP_CONTRAST, 0.6)
 
+    # Chụp liên tục hình ảnh từ webcam trong một khoảng thời gian.
     def capture_for_duration(self, seconds=5, save_dir="captured_frames", max_fps=10):
         os.makedirs(save_dir, exist_ok=True)
         start_time = time.time()
@@ -54,6 +55,7 @@ class Camera:
 
         return frame_count
 
+    # Lấy khung hình từ webcam
     def get_frame(self):
         ret, frame = self.cap.read()
         if ret:
@@ -61,6 +63,7 @@ class Camera:
             return frame
         return None
 
+    # Cải thiện chất lượng hình ảnh
     def _enhance_frame_quality(self, frame):
         kernel = np.array([[-1, -1, -1], [-1, 9, -1], [-1, -1, -1]])
         frame = cv2.filter2D(frame, -1, kernel)
@@ -72,19 +75,22 @@ class Camera:
         frame = cv2.cvtColor(enhanced, cv2.COLOR_LAB2BGR)
         return frame
 
+    # Kiểm tra webcam mở thành công hay chưa
     def is_opened(self):
         return self.cap.isOpened()
 
+    # Giải phóng camera
     def release(self):
         if self.cap.isOpened():
             self.cap.release()
 
+    # Mở camera và trả về đối tượng để dùng
     def __enter__(self):
         return self
 
+    # Khi xong thì tự động đóng camera, kể cả khi bị lỗi.
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.release()
-
 
 class WebcamThread(QThread):
     frame_processed = pyqtSignal(np.ndarray)
@@ -175,6 +181,7 @@ class WebcamThread(QThread):
         cam.release()
         logger.info("🔥 Multi-person webcam stopped")
 
+    # Hàm thiết lập camera
     def _setup_camera(self):
         cam = cv2.VideoCapture(self.camera_id)
         if not cam.isOpened():
@@ -186,6 +193,7 @@ class WebcamThread(QThread):
         cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         return cam
 
+    # Cập nhật số khung hình/giây (FPS)
     def _update_fps(self):
         self.fps_counter += 1
         current_time = time.time()
@@ -194,7 +202,9 @@ class WebcamThread(QThread):
             self.fps_counter = 0
             self.fps_time = current_time
 
+    # Nhận diện nhiều khuôn mặt trong cùng một khung hình
     def _perform_multi_person_recognition(self, frame, current_time):
+
         if current_time - self.cache_time > self.cache_update_interval:
             self._update_cache()
 

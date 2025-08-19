@@ -6,6 +6,7 @@ from PyQt5.QtGui import QFont
 
 # --- STYLESHEET CONSTANTS ---
 STYLES = {
+    #
     "sidebar": {
         "frame": "background: white; border-right: 2px solid #e5e7eb;",
         "header": """
@@ -74,6 +75,7 @@ STYLES = {
 
 
 class CustomButton(QPushButton):
+
     def __init__(self, text, button_type="primary", callback=None, additional_buttons=None):
         super().__init__(text)
         self.setMinimumHeight(36)
@@ -96,8 +98,9 @@ class CustomButton(QPushButton):
         }
         self.setStyleSheet(base_style + colors.get(button_type, colors["primary"]))
 
+    # Tạo layout chứa chính nút này và các nút bổ sung nếu có
     def create_button_layout(self):
-        """Tạo layout chứa chính nút này và các nút bổ sung nếu có"""
+
         layout = QHBoxLayout()
         layout.addWidget(self)
 
@@ -107,7 +110,7 @@ class CustomButton(QPushButton):
         layout.addStretch()
         return layout
 
-
+    # Xây dựng thanh bên
 class Sidebar(QFrame):
     def __init__(self, callbacks: dict):
         super().__init__()
@@ -117,6 +120,7 @@ class Sidebar(QFrame):
         self.nav_buttons = []
         self._setup_ui()
 
+    # Xây dựng giao diện bố cục
     def _setup_ui(self):
         self.setStyleSheet(STYLES["sidebar"]["frame"])
         layout = QVBoxLayout(self)
@@ -156,13 +160,14 @@ class Sidebar(QFrame):
         user_layout.addWidget(user_status)
         layout.addWidget(user_card)
 
-        # Logout Button
+        # Nút Đăng Xuất
         logout_btn = QPushButton("🚪  Đăng xuất")
         logout_btn.setStyleSheet(STYLES["sidebar"]["logout_button"])
         if "logout" in self.callbacks:
             logout_btn.clicked.connect(self.callbacks["logout"])
         layout.addWidget(logout_btn)
 
+    # Tạo các nút điều hướng tùy chỉnh cho thanh bên
     def _create_nav_button(self, icon, text, callback_key):
         btn = QPushButton(f"{icon}  {text}")
         btn.setStyleSheet(STYLES["sidebar"]["nav_button"])
@@ -176,6 +181,7 @@ class Sidebar(QFrame):
         btn.clicked.connect(on_click)
         return btn
 
+    # Quản lý trạng thái hoạt động
     def _set_active_button(self, new_active_button):
         if self.active_button:
             self.active_button.setProperty("active", False)
@@ -188,7 +194,7 @@ class Sidebar(QFrame):
 
         self.active_button = new_active_button
 
-
+    # Tiện ích bảng tùy chỉnh
 class CustomTableWidget(QWidget):
     add_clicked = pyqtSignal()
     edit_clicked = pyqtSignal(int)
@@ -204,6 +210,7 @@ class CustomTableWidget(QWidget):
         self.show_detail_btn = show_detail_btn
         self._setup_ui(add_button_text)
 
+    # Xây dựng toàn bộ giao diện của một bảng dữ liệu tùy chỉnh
     def _setup_ui(self, add_button_text):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(20, 20, 20, 20)
@@ -242,12 +249,14 @@ class CustomTableWidget(QWidget):
         layout.addWidget(self.table)
         self.refresh_data(self.data)
 
+    # Tính toán chiều rộng cố định cho cột "Thao tác"
     def _calculate_action_column_width(self):
         button_count = 2  # Edit, Delete
         if self.show_detail_btn: button_count += 1
         if self.show_status_btn: button_count += 1
         return (button_count * 30) + ((button_count + 1) * 5) + 20  # width * count + spacing + margins
 
+    # Tạo nút hành động
     def _create_action_button(self, icon, tooltip, colors, on_click):
         btn = QPushButton()
         btn.setIcon(self.style().standardIcon(icon))
@@ -258,6 +267,7 @@ class CustomTableWidget(QWidget):
         btn.clicked.connect(on_click)
         return btn
 
+    # Tạo và điền các nút hành động vào một hàng cụ thể
     def _populate_action_buttons(self, row_idx):
         widget = QWidget()
         layout = QHBoxLayout(widget)
@@ -294,9 +304,10 @@ class CustomTableWidget(QWidget):
         self.table.setCellWidget(row_idx, len(self.headers) - 1, widget)
         self.table.setRowHeight(row_idx, 60)
 
+    # Cập nhật lại toàn bộ dữ liệu
     def refresh_data(self, new_data):
         self.data = new_data
-        self.table.setRowCount(0)  # Clear table including widgets
+        self.table.setRowCount(0)
         self.table.setRowCount(len(self.data))
 
         for row_idx, row_data in enumerate(self.data):

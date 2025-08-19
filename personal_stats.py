@@ -7,9 +7,12 @@ from PyQt5.QtCore import Qt, QDate, QSize
 from PyQt5.QtGui import QFont, QColor
 from datetime import datetime
 
-
+    # Giao diện thống kê chấm công cá nhân
 class PersonalAttendanceStatsUI(QWidget):
+
+    # Hàm khởi tạo 1 lớp giao diện
     def __init__(self, user_info=None, db=None, controller_window=None):
+
         super().__init__()
         self.db = db
         self.controller_window = controller_window
@@ -37,13 +40,14 @@ class PersonalAttendanceStatsUI(QWidget):
 
     def init_ui(self):
         """Khởi tạo và xây dựng toàn bộ giao diện người dùng chính."""
+
         title = f"Thống kê chấm công cá nhân - {self.full_name}"
         if self.employee_id:
             title += f" (ID: {self.employee_id})"
         self.setWindowTitle(title)
         self.setGeometry(100, 100, 1400, 900)
 
-        # -- Header --
+        # Tiêu đề
         header_frame = QFrame()
         header_frame.setStyleSheet(
             "QFrame { background-color: #f8f9fa; border-bottom: 2px solid #dee2e6; padding: 5px; }")
@@ -57,6 +61,7 @@ class PersonalAttendanceStatsUI(QWidget):
         buttons_layout.setSpacing(10)
         info_btn = self._create_styled_button("👤 Thông tin", QSize(130, 40), "#17a2b8", "#138496",
                                               self.show_employee_info)
+
         logout_btn = self._create_styled_button("🚪 Đăng xuất", QSize(130, 40), "#dc3545", "#c82333", self.logout)
         buttons_layout.addWidget(info_btn)
         buttons_layout.addWidget(logout_btn)
@@ -86,7 +91,7 @@ class PersonalAttendanceStatsUI(QWidget):
         nav_layout.addWidget(next_btn)
         self.main_layout.addWidget(nav_frame)
 
-        # -- Khu vực tổng quan thống kê --
+        # Trạng thái thống kê
         stats_frame = QFrame()
         stats_frame.setStyleSheet(
             "QFrame { background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; margin: 10px; padding: 15px; }")
@@ -105,7 +110,6 @@ class PersonalAttendanceStatsUI(QWidget):
         stats_layout.addWidget(total_hours_card)
         stats_layout.addStretch()
         self.main_layout.addWidget(stats_frame)
-
         self._build_calendar_view()
 
     def _create_styled_button(self, text, fixed_size, bg_color, hover_color, clicked_slot):
@@ -144,6 +148,7 @@ class PersonalAttendanceStatsUI(QWidget):
         info_layout = QVBoxLayout(info_frame)
         info_layout.setSpacing(10)
 
+        # Xử lý và định dạng ngày gia nhập
         join_date_formatted = 'Không có thông tin'
         raw_join_date = self.user_info.get('join_date')
         if raw_join_date:
